@@ -11,44 +11,18 @@ public class MemberRecord {
     private String name;
     private String address;
     private String phoneNo;
+    private Reader member;
 
-
-    public MemberRecord(int memberId, String type, LocalDate dateOfMembership, int noBooksIssued, int maxBookLimit, String name, String address, String phoneNo) {
+    public MemberRecord(int memberId, String type, LocalDate dateOfMembership, String name, String address, String phoneNo, Reader member) {
         this.memberId = memberId;
         this.type = type;
         this.dateOfMembership = dateOfMembership;
-        this.noBooksIssued = noBooksIssued;
-        this.maxBookLimit = maxBookLimit;
+        this.noBooksIssued = 0;
+        this.maxBookLimit = Reader.MAX_BOOK_LIMIT;
         this.name = name;
         this.address = address;
         this.phoneNo = phoneNo;
-    }
-
-    public void incBookIssued() {
-        this.noBooksIssued++;
-    }
-
-
-    public void decBookIssued() {
-        if (this.noBooksIssued > 0) {
-            this.noBooksIssued--;
-        }
-    }
-
-    public String getMemberName() {
-        return name;
-    }
-
-    public int getMaxBookLimit() {
-        return maxBookLimit;
-    }
-
-    public int getNoBooksIssued() {
-        return noBooksIssued;
-    }
-
-    public LocalDate getDateOfMembership() {
-        return dateOfMembership;
+        this.member = member;
     }
 
     public int getMemberId() {
@@ -59,6 +33,17 @@ public class MemberRecord {
         return type;
     }
 
+    public LocalDate getDateOfMembership() {
+        return dateOfMembership;
+    }
+
+    public int getNoBooksIssued() {
+        return noBooksIssued;
+    }
+
+    public int getMaxBookLimit() {
+        return maxBookLimit;
+    }
 
     public String getName() {
         return name;
@@ -72,8 +57,18 @@ public class MemberRecord {
         return phoneNo;
     }
 
-    public void setNoBooksIssued(int noBooksIssued) {
-        this.noBooksIssued = noBooksIssued;
+    public Reader getMember() {
+        return member;
+    }
+
+    public void incBookIssued() {
+        this.noBooksIssued++;
+    }
+
+    public void decBookIssued() {
+        if (this.noBooksIssued > 0) {
+            this.noBooksIssued--;
+        }
     }
 
     public void setMaxBookLimit(int maxBookLimit) {

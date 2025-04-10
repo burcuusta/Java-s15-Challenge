@@ -15,6 +15,27 @@ public class Librarian extends Person {
         this.membershipService = membershipService;
     }
 
+    public Librarian(String name, String password) {
+        super(name);
+        this.password = password;
+    }
+
+    public BorrowingService getBorrowingService() {
+        return borrowingService;
+    }
+
+    public void setBorrowingService(BorrowingService borrowingService) {
+        this.borrowingService = borrowingService;
+    }
+
+    public MembershipService getMembershipService() {
+        return membershipService;
+    }
+
+    public void setMembershipService(MembershipService membershipService) {
+        this.membershipService = membershipService;
+    }
+
     public boolean verifyMember(Reader reader) {
         return membershipService.verifyMember(reader);
     }

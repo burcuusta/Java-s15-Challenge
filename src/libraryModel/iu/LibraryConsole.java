@@ -1,8 +1,9 @@
 package libraryModel.iu;
 
-import libraryModel.*;
+
 import libraryModel.data.*;
 import libraryModel.services.BillingService;
+import libraryModel.services.BookManagementService;
 import libraryModel.services.BorrowingService;
 import libraryModel.services.MembershipService;
 
@@ -12,194 +13,321 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class LibraryConsole {
-    private static Scanner scanner = new Scanner(System.in);
-    private static Library library = new Library();
-    private static Map<Reader, MemberRecord> memberRecords = new HashMap<>();
-    private static BillingService billingService = new BillingService();
-    private static BorrowingService borrowingService = new BorrowingService(library, memberRecords, billingService);
-    private static MembershipService membershipService = new MembershipService(memberRecords);
-    private static Librarian librarian = new Librarian("Admin", "admin123", borrowingService, membershipService);
+    private Library library;
+    private BookManagementService bookManagementService;
+    private BorrowingService borrowingService;
+    private MembershipService membershipService;
+    private Librarian loggedInLibrarian;
+    private Scanner scanner;
 
-
-    public static void main(String[] args) {
-        System.out.println("📚 Kütüphane Otomasyon Sistemine Hoşgeldiniz!");
-        seedData();
-
-        boolean running = true;
-        while (running) {
-            showMenu();
-            int choice = getInput("Seçiminiz: ");
-
-            switch (choice) {
-                case 1 -> addNewBook();
-                case 2 -> searchBook();
-                case 3 -> updateBook();
-                case 4 -> deleteBook();
-                case 5 -> listBooksByCategory();
-                case 6 -> listBooksByAuthor();
-                case 7 -> borrowBook();
-                case 8 -> returnBook();
-                case 9 -> running = false;
-                default -> System.out.println("Geçersiz seçim, tekrar deneyin.");
-            }
-        }
-        System.out.println("👋 Sistemden çıkılıyor...");
+    public LibraryConsole() {
+        this.library = new Library();
+        Map<Reader, MemberRecord> memberRecords = new HashMap<>();
+        this.membershipService = new MembershipService();
+        this.bookManagementService = new BookManagementService(this.library);
+        BillingService billingService = new BillingService();
+        this.borrowingService = new BorrowingService(this.library, memberRecords, billingService);
+        this.loggedInLibrarian = new Librarian("admin", "1234");
+        this.loggedInLibrarian.setMembershipService(this.membershipService);
+        this.scanner = new Scanner(System.in);
+        addInitialData();
     }
 
-    private static void showMenu() {
-        System.out.println("\n=== Ana Menü ===");
+    private void addInitialData() {
+        Author tolkien = new Author("J.R.R. Tolkien");
+        Author asimov = new Author("Isaac Asimov");
+        Book hobbit = new Book(1, "The Hobbit", tolkien, "1st", "Fantasy");
+        Book foundation = new Book(2, "Foundation", asimov, "1st", "Science Fiction");
+        library.addBook(hobbit);
+        library.addBook(foundation);
+        library.addReader(new Student("Burcu"));
+        library.addReader(new Faculty("faculty"));
+        membershipService.registerMember(library.getReaders().get(0));
+        membershipService.registerMember(library.getReaders().get(1));
+    }
+
+    public void run() {
+        System.out.println("Kütüphane Otomasyon Sistemine Hoş Geldiniz!");
+        while (true) {
+            displayMenu();
+            System.out.print("Lütfen bir işlem seçin: ");
+            String choice = scanner.nextLine();
+            switch (choice) {
+                case "1":
+                    addBook();
+                    break;
+                case "2":
+                    findBook();
+                    break;
+                case "3":
+                    updateBook();
+                    break;
+                case "4":
+                    deleteBook();
+                    break;
+                case "5":
+                    listBooksByCategory();
+                    break;
+                case "6":
+                    listBooksByAuthor();
+                    break;
+                case "7":
+                    borrowBook();
+                    break;
+                case "8":
+                    returnBook();
+                    break;
+                case "9":
+                    registerMember();
+                    break;
+                case "10":
+                    listAllBooks();
+                    break;
+                case "11":
+                    listAllReaders();
+                    break;
+                case "0":
+                    System.out.println("Sistemden çıkılıyor...");
+                    scanner.close();
+                    return;
+                default:
+                    System.out.println("Geçersiz seçim. Lütfen tekrar deneyin.");
+            }
+            System.out.println();
+        }
+    }
+
+    private void displayMenu() {
+        System.out.println("\n--- Menü ---");
         System.out.println("1. Yeni Kitap Ekle");
-        System.out.println("2. Kitap Ara (ID/İsim/Yazar)");
+        System.out.println("2. Kitap Ara (ID, İsim)");
         System.out.println("3. Kitap Bilgilerini Güncelle");
         System.out.println("4. Kitap Sil");
         System.out.println("5. Kategoriye Göre Kitapları Listele");
         System.out.println("6. Yazara Göre Kitapları Listele");
         System.out.println("7. Kitap Ödünç Al");
-        System.out.println("8. Kitap Geri İade Et");
-        System.out.println("9. Çıkış");
+        System.out.println("8. Kitap İade Et");
+        System.out.println("9. Yeni Üye Kaydet");
+        System.out.println("10. Tüm Kitapları Listele");
+        System.out.println("11. Tüm Üyeleri Listele");
+        System.out.println("0. Çıkış");
     }
 
-    private static int getInput(String prompt) {
-        System.out.print(prompt);
-        while (!scanner.hasNextInt()) scanner.next();
-        return scanner.nextInt();
-    }
-
-    private static String getLine(String prompt) {
-        System.out.print(prompt);
-        scanner.nextLine();
-        return scanner.nextLine();
-    }
-
-    // Menü İşlemleri:
-
-    private static void addNewBook() {
-        String name = getLine("Kitap Adı: ");
-        String authorName = getLine("Yazar Adı: ");
-        String edition = getLine("Baskı: ");
-
+    private void addBook() {
+        System.out.print("Kitap Adı: ");
+        String name = scanner.nextLine();
+        System.out.print("Yazar Adı: ");
+        String authorName = scanner.nextLine();
         Author author = new Author(authorName);
-        Book book = new Book(name, author, edition);
-        library.addBook(book);
-
-        System.out.println("📘 Kitap başarıyla eklendi: " + book.getName());
+        System.out.print("Baskı: ");
+        String edition = scanner.nextLine();
+        System.out.print("Kategori: ");
+        String category = scanner.nextLine();
+        int id = (int) (System.currentTimeMillis() % 1000);
+        Book newBook = new Book(id, name, author, edition, category);
+        bookManagementService.addBook(newBook);
     }
 
-    private static void searchBook() {
-        String keyword = getLine("ID, İsim veya Yazar adı giriniz: ");
-        List<Book> found = library.getBooks().stream()
-                .filter(b -> String.valueOf(b.getId()).equals(keyword)
-                        || b.getName().equalsIgnoreCase(keyword)
-                        || b.getAuthor().getName().equalsIgnoreCase(keyword))
-                .toList();
-
-        if (found.isEmpty()) {
-            System.out.println("❌ Kitap bulunamadı.");
+    private void findBook() {
+        System.out.println("Kitaba göre arama yapmak için 'isim' yazın, ID'ye göre aramak için 'id' yazın:");
+        String searchType = scanner.nextLine().toLowerCase();
+        if (searchType.equals("isim")) {
+            System.out.print("Aranacak Kitap Adı: ");
+            String name = scanner.nextLine();
+            List<Book> books = bookManagementService.findBooksByName(name);
+            if (books.isEmpty()) {
+                System.out.println("Kitap bulunamadı.");
+            } else {
+                books.forEach(System.out::println);
+            }
+        } else if (searchType.equals("id")) {
+            System.out.print("Aranacak Kitap ID: ");
+            try {
+                int id = Integer.parseInt(scanner.nextLine());
+                Book book = bookManagementService.findBookById(id);
+                if (book == null) {
+                    System.out.println("Kitap bulunamadı.");
+                } else {
+                    System.out.println(book);
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Geçersiz ID formatı.");
+            }
         } else {
-            found.forEach(b -> System.out.println("✅ " + b));
+            System.out.println("Geçersiz arama türü.");
         }
     }
 
-    private static void updateBook() {
-        int id = getInput("Güncellenecek kitabın ID'si: ");
-        Book book = library.findBookById(id);
-
-        if (book != null) {
-            String newName = getLine("Yeni Adı (" + book.getName() + "): ");
-            String newEdition = getLine("Yeni Baskı (" + book.getEdition() + "): ");
-            book.setName(newName);
-            book.setEdition(newEdition);
-            System.out.println("✅ Kitap bilgileri güncellendi.");
-        } else {
-            System.out.println("❌ Kitap bulunamadı.");
+    private void updateBook() {
+        System.out.print("Güncellenecek Kitap ID: ");
+        try {
+            int id = Integer.parseInt(scanner.nextLine());
+            Book existingBook = bookManagementService.findBookById(id);
+            if (existingBook == null) {
+                System.out.println("Kitap bulunamadı.");
+                return;
+            }
+            System.out.print("Yeni Kitap Adı (" + existingBook.getName() + "): ");
+            String newName = scanner.nextLine();
+            if (!newName.isEmpty()) {
+                existingBook.setName(newName);
+            }
+            System.out.print("Yeni Yazar Adı (" + existingBook.getAuthor().getName() + "): ");
+            String newAuthorName = scanner.nextLine();
+            if (!newAuthorName.isEmpty()) {
+                existingBook.setAuthor(new Author(newAuthorName));
+            }
+            System.out.print("Yeni Baskı (" + existingBook.getEdition() + "): ");
+            String newEdition = scanner.nextLine();
+            if (!newEdition.isEmpty()) {
+                existingBook.setEdition(newEdition);
+            }
+            System.out.print("Yeni Kategori (" + existingBook.getCategoryName() + "): ");
+            String newCategory = scanner.nextLine();
+            if (!newCategory.isEmpty()) {
+                existingBook.setCategoryName(newCategory);
+            }
+            bookManagementService.updateBook(existingBook);
+        } catch (NumberFormatException e) {
+            System.out.println("Geçersiz ID formatı.");
         }
     }
 
-    private static void deleteBook() {
-        int id = getInput("Silinecek kitabın ID'si: ");
-        if (library.removeBookById(id)) {
-            System.out.println("🗑️ Kitap silindi.");
-        } else {
-            System.out.println("❌ Kitap bulunamadı.");
+    private void deleteBook() {
+        System.out.print("Silinecek Kitap ID: ");
+        try {
+            int id = Integer.parseInt(scanner.nextLine());
+            if (bookManagementService.deleteBook(id)) {
+                System.out.println("Kitap silindi.");
+            } else {
+                System.out.println("Kitap silinemedi.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Geçersiz ID formatı.");
         }
     }
 
-    private static void listBooksByCategory() {
-        String category = getLine("Kategori adı giriniz: ");
-        List<Book> list = library.getBooks().stream()
-                .filter(b -> b instanceof BookCategory
-                        && ((BookCategory) b).getCategoryName().equalsIgnoreCase(category))
-                .toList();
-
-        list.forEach(b -> System.out.println("📚 " + b));
-        if (list.isEmpty()) System.out.println("❌ Bu kategoride kitap bulunamadı.");
+    private void listBooksByCategory() {
+        System.out.print("Listelenecek Kategori Adı: ");
+        String category = scanner.nextLine();
+        List<Book> books = bookManagementService.listBooksByCategory(category);
+        if (books.isEmpty()) {
+            System.out.println("Bu kategoride kitap bulunamadı.");
+        } else {
+            System.out.println("--- " + category + " Kategorisindeki Kitaplar ---");
+            books.forEach(System.out::println);
+        }
     }
 
-    private static void listBooksByAuthor() {
-        String author = getLine("Yazar adı giriniz: ");
-        List<Book> list = library.getBooks().stream()
-                .filter(b -> b.getAuthor().getName().equalsIgnoreCase(author))
-                .toList();
-
-        list.forEach(b -> System.out.println("📚 " + b));
-        if (list.isEmpty()) System.out.println("❌ Bu yazara ait kitap bulunamadı.");
+    private void listBooksByAuthor() {
+        System.out.print("Listelenecek Yazar Adı: ");
+        String authorName = scanner.nextLine();
+        List<Book> books = bookManagementService.findBooksByAuthor(authorName);
+        if (books.isEmpty()) {
+            System.out.println("Bu yazara ait kitap bulunamadı.");
+        } else {
+            System.out.println("--- " + authorName + " Tarafından Yazılan Kitaplar ---");
+            books.forEach(System.out::println);
+        }
     }
 
-    private static void registerNewMember() {
-        String name = getLine("Yeni üyenin adı: ");
-        Reader newReader = new Reader(name);
-        MemberRecord record = membershipService.registerMember(newReader);
-        System.out.println("✅ " + newReader.getName() + " başarıyla üye olarak kaydedildi. Üye ID: " + record.getMemberId());
-    }
+    private void borrowBook() {
+        System.out.print("Ödünç Alacak Üye Adı: ");
+        String readerName = scanner.nextLine();
+        Reader readerFromLibrary = library.getReaders().stream()
+                .filter(r -> r.getName().equalsIgnoreCase(readerName))
+                .findFirst().orElse(null);
 
-    private static void borrowBook() {
-        String userName = getLine("Adınız: ");
-        Reader reader = findOrCreateReader(userName);
-        if (!membershipService.verifyMember(reader)) {
-            System.out.println("❌ Bu kullanıcı üye değil. Lütfen önce üye olun.");
+        if (readerFromLibrary == null) {
+            System.out.println("Üye bulunamadı.");
             return;
         }
-        int id = getInput("Ödünç almak istediğiniz kitap ID'si: ");
-        Book book = library.findBookById(id);
 
-        if (librarian.issueBook(reader, book)) {
-            System.out.println("✅ Kitap ödünç alındı.");
-        } else {
-            System.out.println("❌ Kitap ödünç alınamadı.");
+
+        MemberRecord memberRecord = membershipService.getMemberRecord(readerFromLibrary);
+
+        if (memberRecord == null) {
+            System.out.println("❌ Okuyucu kaydı bulunamadı.");
+            return;
+        }
+
+        Reader registeredReader = memberRecord.getMember();
+        if (registeredReader == null) {
+            System.out.println("❌ Kayıtlı üye nesnesi null.");
+            return;
+        }
+
+        System.out.print("Ödünç Alınacak Kitap ID: ");
+        try {
+            int bookId = Integer.parseInt(scanner.nextLine());
+            Book book = bookManagementService.findBookById(bookId);
+            if (book == null) {
+                System.out.println("Kitap bulunamadı.");
+                return;
+            }
+
+            if (borrowingService.borrowBook(registeredReader, book)) {
+                System.out.println("✅ " + book.getName() + " adlı kitap " + registeredReader.getName() + " tarafından ödünç alındı.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Geçersiz Kitap ID formatı.");
         }
     }
 
-
-    private static void returnBook() {
-        String userName = getLine("Adınız: ");
-        Reader reader = new Reader(userName);
-        int id = getInput("İade edilecek kitap ID'si: ");
-        Book book = library.findBookById(id);
-
-        if (book != null) {
-            librarian.returnBook(reader, book);
-        } else {
-            System.out.println("❌ Kitap bulunamadı.");
+    private void returnBook() {
+        System.out.print("Kitabı İade Eden Üye Adı: ");
+        String readerName = scanner.nextLine();
+        Reader reader = library.getReaders().stream()
+                .filter(r -> r.getName().equalsIgnoreCase(readerName))
+                .findFirst().orElse(null);
+        if (reader == null) {
+            System.out.println("Üye bulunamadı.");
+            return;
+        }
+        System.out.print("İade Edilecek Kitap ID: ");
+        try {
+            int bookId = Integer.parseInt(scanner.nextLine());
+            Book book = bookManagementService.findBookById(bookId);
+            if (book == null) {
+                System.out.println("Kitap bulunamadı.");
+                return;
+            }
+            borrowingService.returnBook(reader, book);
+        } catch (NumberFormatException e) {
+            System.out.println("Geçersiz Kitap ID formatı.");
         }
     }
-    private static Reader findOrCreateReader(String userName) {
-        return library.getReaders().stream()
-                .filter(r -> r.getName().equalsIgnoreCase(userName))
-                .findFirst()
-                .orElseGet(() -> {
-                    Reader newReader = new Reader(userName);
-                    library.addReader(newReader);
-                    return newReader;
-                });
+
+    private void registerMember() {
+        System.out.print("Yeni Üye Adı: ");
+        String readerName = scanner.nextLine();
+        Reader newReader = new Student(readerName);
+        library.addReader(newReader);
+        membershipService.registerMember(newReader);
     }
 
+    private void listAllBooks() {
+        List<Book> books = bookManagementService.listAllBooks();
+        if (books.isEmpty()) {
+            System.out.println("Kütüphanede hiç kitap bulunmamaktadır.");
+        } else {
+            System.out.println("--- Tüm Kitaplar ---");
+            books.forEach(System.out::println);
+        }
+    }
 
-    private static void seedData() {
-        Author orwell = new Author("George Orwell");
-        Author rowling = new Author("J.K. Rowling");
+    private void listAllReaders() {
+        List<Reader> readers = library.getReaders();
+        if (readers.isEmpty()) {
+            System.out.println("Sistemde hiç üye bulunmamaktadır.");
+        } else {
+            System.out.println("--- Tüm Üyeler ---");
+            readers.forEach(r -> System.out.println(r.whoYouAre() + ": " + r.getName()));
+        }
+    }
 
-        library.addBook(new Book("1984", orwell, "1. Baskı"));
-        library.addBook(new Book("Hayvan Çiftliği", orwell, "2. Baskı"));
-        library.addBook(new Book("Harry Potter", rowling, "1. Baskı"));
+    public static void main(String[] args) {
+        LibraryConsole console = new LibraryConsole();
+        console.run();
     }
 }

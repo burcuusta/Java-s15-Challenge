@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BorrowingService {
     private List<LoanRecord> loanRecords;
@@ -29,6 +30,12 @@ public class BorrowingService {
             memberRecord.incBookIssued();
             billingService.createBill(reader, book);
             return true;
+        } else if (memberRecord == null) {
+            System.out.println("❌ Okuyucu kaydı bulunamadı.");
+        } else if (memberRecord.getNoBooksIssued() >= memberRecord.getMaxBookLimit()) {
+            System.out.println("❌ " + reader.getName() + " adlı okuyucu maksimum kitap ödünç alma limitine ulaştı.");
+        } else if (!book.isAvailable()) {
+            System.out.println("❌ " + book.getName() + " adlı kitap şu anda ödünç alınmış durumda.");
         }
         return false;
     }
@@ -50,8 +57,15 @@ public class BorrowingService {
                 System.out.println("✅ Kitap iade edildi.");
             }
         } else {
-            System.out.println("❌ Kitap iade edilemedi.");
+            System.out.println("❌ Kitap iade edilemedi. Lütfen ödünç alma kaydını kontrol edin.");
         }
+    }
+
+    public List<Book> getBorrowedBooksForReader(Reader reader) {
+        return loanRecords.stream()
+                .filter(record -> record.getReader().equals(reader) && record.getReturnDate() == null)
+                .map(LoanRecord::getBook)
+                .collect(Collectors.toList());
     }
 
     private LoanRecord findLoanRecord(Reader reader, Book book) {
@@ -62,6 +76,4 @@ public class BorrowingService {
         }
         return null;
     }
-
-
 }

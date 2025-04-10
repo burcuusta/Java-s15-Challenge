@@ -1,7 +1,7 @@
 package libraryModel.services;
 
 
-import libraryModel.BookCategory;
+
 import libraryModel.data.Book;
 import libraryModel.data.Library;
 
@@ -24,11 +24,9 @@ public class BookManagementService {
         }
     }
 
-
     public Book findBookById(int id) {
         return library.findBookById(id);
     }
-
 
     public List<Book> findBooksByName(String name) {
         return library.getBooks().stream()
@@ -36,11 +34,9 @@ public class BookManagementService {
                 .collect(Collectors.toList());
     }
 
-
     public List<Book> findBooksByAuthor(String authorName) {
         return library.findBooksByAuthor(authorName);
     }
-
 
     public void updateBook(Book updatedBook) {
         Book existingBook = findBookById(updatedBook.getId());
@@ -48,13 +44,12 @@ public class BookManagementService {
             existingBook.setName(updatedBook.getName());
             existingBook.setAuthor(updatedBook.getAuthor());
             existingBook.setEdition(updatedBook.getEdition());
-
+            existingBook.setCategoryName(updatedBook.getCategoryName());
             System.out.println("✅ Kitap bilgileri güncellendi: " + updatedBook.getName());
         } else {
             System.out.println("❌ Belirtilen ID'ye sahip kitap bulunamadı.");
         }
     }
-
 
     public boolean deleteBook(int id) {
         if (library.removeBookById(id)) {
@@ -68,12 +63,7 @@ public class BookManagementService {
 
     public List<Book> listBooksByCategory(String category) {
         return library.getBooks().stream()
-                .filter(book -> {
-                    if (book instanceof BookCategory) {
-                        return ((BookCategory) book).getCategoryName().equalsIgnoreCase(category);
-                    }
-                    return false;
-                })
+                .filter(book -> book.getCategoryName().equalsIgnoreCase(category))
                 .collect(Collectors.toList());
     }
 

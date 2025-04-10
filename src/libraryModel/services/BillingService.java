@@ -5,19 +5,16 @@ import libraryModel.data.Book;
 import libraryModel.data.Reader;
 
 public class BillingService {
-    public double calculateFine(Book book) {
-        return 5.0;
-    }
-
     public Bill createBill(Reader reader, Book book) {
-        double fineAmount = calculateFine(book);
-        Bill bill = new Bill(reader, book, fineAmount);
-        reader.getBills().put(book, fineAmount);
+        double amount = 10.0;
+        Bill bill = new Bill(reader, book, amount);
+        reader.getBills().put(book, amount);
+        System.out.println("✅ " + reader.getName() + " için " + book.getName() + " adlı kitap ödünç alındığında $" + amount + " tutarında fatura oluşturuldu.");
         return bill;
     }
 
-    private int generateBillId() {
-        return (int) (System.currentTimeMillis() % 100000);
-    }
+    public double calculateFine(Book book) {
 
+        return 0.0;
+    }
 }

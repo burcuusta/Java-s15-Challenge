@@ -1,49 +1,24 @@
 package libraryModel.data;
 
-public class Book {
-    private static int counter = 0;
+import libraryModel.BookCategory;
+
+public class Book implements BookCategory {
     private int id;
     private String name;
     private Author author;
-
-    public static int getCounter() {
-        return counter;
-    }
-
-    public static void setCounter(int counter) {
-        Book.counter = counter;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setAuthor(Author author) {
-        this.author = author;
-    }
-
-    public String getEdition() {
-        return edition;
-    }
-
-    public void setEdition(String edition) {
-        this.edition = edition;
-    }
-
     private String edition;
     private boolean available;
     private Reader owner;
+    private String categoryName;
 
-    public Book(String name, Author author, String edition) {
-        this.id = ++counter;
+    public Book(int id, String name, Author author, String edition, String categoryName) {
+        this.id = id;
         this.name = name;
         this.author = author;
         this.edition = edition;
         this.available = true;
+        this.owner = null;
+        this.categoryName = categoryName;
     }
 
     public int getId() {
@@ -56,6 +31,10 @@ public class Book {
 
     public Author getAuthor() {
         return author;
+    }
+
+    public String getEdition() {
+        return edition;
     }
 
     public boolean isAvailable() {
@@ -75,8 +54,32 @@ public class Book {
     }
 
     @Override
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setAuthor(Author author) {
+        this.author = author;
+    }
+
+    public void setEdition(String edition) {
+        this.edition = edition;
+    }
+
+    @Override
     public String toString() {
-        return "Book #" + id + ": " + name + " by " + author.getName() +
-                " | Available: " + available;
+        return "ID: " + id + ", Name: " + name + ", Author: " + author.getName() + ", Edition: " + edition + ", Available: " + available;
     }
 }

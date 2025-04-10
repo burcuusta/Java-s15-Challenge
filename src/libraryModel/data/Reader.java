@@ -1,12 +1,9 @@
 package libraryModel.data;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public class Reader extends Person {
-    private static final int MAX_BOOK_LIMIT = 5;
+public abstract class Reader extends Person {
+    protected static final int MAX_BOOK_LIMIT = 5;
     private Set<Book> borrowedBooks;
     private Map<Book, Double> bills;
 
@@ -16,36 +13,28 @@ public class Reader extends Person {
         this.bills = new HashMap<>();
     }
 
-    public boolean borrowBook(Book book) {
-        if (borrowedBooks.size() < MAX_BOOK_LIMIT && book.isAvailable()) {
-            borrowedBooks.add(book);
-            book.setOwner(this);
-            book.setAvailable(false);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean returnBook(Book book) {
-        if (borrowedBooks.remove(book)) {
-            book.setAvailable(true);
-            book.setOwner(null);
-            bills.remove(book);
-            return true;
-        }
-        return false;
+    public Set<Book> getBorrowedBooks() {
+        return borrowedBooks;
     }
 
     public Map<Book, Double> getBills() {
         return bills;
     }
 
-    public Set<Book> getBorrowedBooks() {
-        return borrowedBooks;
+
+    @Override
+    public abstract String whoYouAre();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Reader reader = (Reader) o;
+        return Objects.equals(name, reader.name);
     }
 
     @Override
-    public String whoYouAre() {
-        return "Reader: " + name;
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }

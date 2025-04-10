@@ -3,8 +3,8 @@ package libraryModel.data;
 import libraryModel.BookCategory;
 
 public class Journal extends Book implements BookCategory {
-    public Journal(String name, Author author, String edition) {
-        super(name, author, edition);
+    public Journal(int id,String name, Author author, String edition, String categoryName) {
+        super(id, name, author, edition,categoryName);
     }
 
     @Override

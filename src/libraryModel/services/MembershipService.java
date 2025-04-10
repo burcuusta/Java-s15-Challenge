@@ -1,16 +1,15 @@
 package libraryModel.services;
 
-import libraryModel.data.MemberRecord;
-import libraryModel.data.Reader;
-
+import libraryModel.data.*;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MembershipService {
     private Map<Reader, MemberRecord> memberRecords;
 
-    public MembershipService(Map<Reader, MemberRecord> memberRecords) {
-        this.memberRecords = memberRecords;
+    public MembershipService() {
+        this.memberRecords = new HashMap<>();
     }
 
     public boolean verifyMember(Reader reader) {
@@ -23,16 +22,18 @@ public class MembershipService {
                     generateMemberId(),
                     "Basic",
                     LocalDate.now(),
-                    0,
-                    5,
                     reader.getName(),
                     "",
-                    ""
+                    "",
+                    reader
             );
             memberRecords.put(reader, newRecord);
+            System.out.println("✅ " + reader.getName() + " adlı okuyucu sisteme üye olarak kaydedildi.");
             return newRecord;
+        } else {
+            System.out.println("⚠️ " + reader.getName() + " adlı okuyucu zaten üye.");
+            return memberRecords.get(reader);
         }
-        return memberRecords.get(reader);
     }
 
     public MemberRecord getMemberRecord(Reader reader) {
@@ -42,7 +43,4 @@ public class MembershipService {
     private int generateMemberId() {
         return (int) (System.currentTimeMillis() % 1000);
     }
-
-
-
 }

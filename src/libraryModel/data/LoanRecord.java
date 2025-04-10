@@ -15,14 +15,6 @@ public class LoanRecord {
         this.returnDate = null;
     }
 
-    public LocalDate getReturnDate() {
-        return returnDate;
-    }
-
-    public void setReturnDate(LocalDate returnDate) {
-        this.returnDate = returnDate;
-    }
-
     public Book getBook() {
         return book;
     }
@@ -35,20 +27,11 @@ public class LoanRecord {
         return borrowDate;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        LoanRecord that = (LoanRecord) o;
-        return book.equals(that.book) && reader.equals(that.reader) && borrowDate.equals(that.borrowDate);
+    public LocalDate getReturnDate() {
+        return returnDate;
     }
 
-    @Override
-    public int hashCode() {
-        int result = book.hashCode();
-        result = 31 * result + reader.hashCode();
-        result = 31 * result + borrowDate.hashCode();
-        return result;
+    public void setReturnDate(LocalDate returnDate) {
+        this.returnDate = returnDate;
     }
-
 }
